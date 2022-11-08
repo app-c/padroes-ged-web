@@ -1,6 +1,7 @@
 import { ChangeEvent, useCallback, useState } from 'react'
 import {ref, uploadBytes, getDownloadURL} from 'firebase/storage'
 import {storege} from './config/firebase'
+import { Select } from './components'
 
 
 
@@ -34,6 +35,16 @@ console.log(nome)
         <h1>Uploads de arquivos da geds</h1>
 
         <input onChange={getFile} type='file' />
+
+        <p >Qual o tipo de ged</p>
+
+        <div style={{display: 'flex'}} >
+        <Select />
+        <Select />
+        <Select />
+
+        </div>
+
 
 
         <h3>Nome do arquivo</h3>
