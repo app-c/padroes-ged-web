@@ -10,7 +10,7 @@ export function Geds({title, pres}: Props) {
         <Container>
             <p>{title}</p>
 
-            <DeleteContainer>Deletear</DeleteContainer>
+            <DeleteContainer onClick={pres} >Deletear</DeleteContainer>
         </Container>
     )
 }

@@ -1,8 +1,8 @@
 import { ChangeEvent, useCallback, useEffect, useState } from 'react'
-import {ref, uploadBytes, getDownloadURL} from 'firebase/storage'
+import {ref, uploadBytes, getDownloadURL, deleteObject} from 'firebase/storage'
 import {fire, storege} from './config/firebase'
 import { Select } from './components'
-import { addDoc, collection, onSnapshot } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, onSnapshot, doc } from 'firebase/firestore'
 import { Geds } from './components/geds'
 
 
@@ -21,6 +21,8 @@ function App() {
   const [file, setFile] = useState<any>(null)
 
   const [dados, setDados] = useState<Props[]>([])
+  const colect = collection(fire, value)
+
 
   const getFile = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
 
@@ -33,24 +35,42 @@ function App() {
     const fileName = String(file.name).split('.').map(String)[0]
     const fileRef = ref(storege, `pdf/${value}/${fileName.trim()}.pdf`)
 
+    const fil = dados.find(h => h.name === fileName)
+
+    
+    console.log(fil)
+    if(fil) {
+      deleteObject(fileRef)
+      const ref = doc(fire, value, fil.id)
+      deleteDoc(ref)
+      
+    }
 
     await uploadBytes(fileRef, file).then(h => { console.log('app ok')})
     const url = await getDownloadURL(fileRef) 
     console.log(url)
 
-    const dados = {
+    const dt = {
       page: 1,
       name: fileName,
       uri: url
     }
 
     const colect = collection(fire, value)
-    addDoc(colect, dados).then(() => alert('success'))
+    addDoc(colect, dt).then(() => alert('success'))
     
-  }, [file, value])
+  }, [file, value, dados])
+
+  const handleDelete = useCallback(async(data: Props) => {
+    const fileRef = ref(storege, `pdf/${value}/${data.name}.pdf`)
+
+    deleteObject(fileRef)
+    const refD = doc(fire, value, data.id)
+    deleteDoc(refD)
+    
+  }, [value])
 
   useEffect(() => {
-    const colect = collection(fire, value)
 
     onSnapshot(colect, h => {
       const res = h.docs.map(p => {
@@ -84,9 +104,9 @@ function App() {
         <button onClick={upload} >upload</button>
       </div>
 
-      <div style={{alignSelf: 'flex-start', display: 'flex', width: '100%'}} >
+      <div style={{alignSelf: 'flex-start', padding: 10, flexDirection: 'column', display: 'flex'}} >
         {dados.map(h => (
-          <Geds title={h.name} />
+            <Geds pres={() => handleDelete(h)} key={h.id} title={h.name} />
         ))}
       </div>
 
