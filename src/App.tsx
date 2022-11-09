@@ -3,12 +3,14 @@ import {ref, uploadBytes, getDownloadURL} from 'firebase/storage'
 import {fire, storege} from './config/firebase'
 import { Select } from './components'
 import { addDoc, collection, onSnapshot } from 'firebase/firestore'
+import { Geds } from './components/geds'
 
 
 interface Props {
   name: string
   uri: string
   page:number
+  id: string
 }
 
 function App() {
@@ -32,7 +34,7 @@ function App() {
     const fileRef = ref(storege, `pdf/${value}/${fileName.trim()}.pdf`)
 
 
-    uploadBytes(fileRef, file).then(h => { console.log('app ok')})
+    await uploadBytes(fileRef, file).then(h => { console.log('app ok')})
     const url = await getDownloadURL(fileRef) 
     console.log(url)
 
@@ -51,7 +53,12 @@ function App() {
     const colect = collection(fire, value)
 
     onSnapshot(colect, h => {
-      const res = h.docs.map(h => h.data() as Props)
+      const res = h.docs.map(p => {
+        return {
+          ...p.data(),
+          id: p.id,
+        } as Props
+      })
       setDados(res)
     })
   }, [value])
@@ -77,13 +84,11 @@ function App() {
         <button onClick={upload} >upload</button>
       </div>
 
-      {/* <div style={{alignSelf: 'flex-start'}} >
+      <div style={{alignSelf: 'flex-start', display: 'flex', width: '100%'}} >
         {dados.map(h => (
-          <div key={h.name} >
-            <p>{h.name}</p>
-          </div>
+          <Geds title={h.name} />
         ))}
-      </div> */}
+      </div>
 
     </div>
   )
