@@ -1,17 +1,16 @@
-import { Circle, Container } from "./styles";
+import { Box, Circle, Container } from "./styles";
 
 interface Props {
     title: string
+    pres: () => void
+    select: boolean
 }
 
-export function Select() {
+export function Select({title, pres, select}: Props) {
     return ( 
-        <div style={{display: "flex", flexDirection: 'column', marginLeft: 25}} >
-            <p>sed</p>
-            <Container>
-                <Circle />
-            </Container>
+        <Box select={select} onClick={pres} >
+            <p>{title}</p>
 
-        </div>
+        </Box>
     )
 }
