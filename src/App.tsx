@@ -1,23 +1,24 @@
-import { ChangeEvent, useCallback, useState } from 'react'
+import { ChangeEvent, useCallback, useEffect, useState } from 'react'
 import {ref, uploadBytes, getDownloadURL} from 'firebase/storage'
-import { addDoc, collection } from 'firebase/firestore'
 import {fire, storege} from './config/firebase'
 import { Select } from './components'
+import { addDoc, collection, onSnapshot } from 'firebase/firestore'
 
-export const colection = {
-  sed: 'sed',
-  ser: 'ser',
-  set: 'set',
-  padroes: 'pad'
+
+interface Props {
+  name: string
+  uri: string
+  page:number
 }
-
 
 function App() {
   const [count, setCount] = useState(0)
+  const [value, setValue] = useState('sed')
 
   const [nome, setNome] = useState('')
   const [file, setFile] = useState<any>(null)
-  const [value, setValue] = useState('')
+
+  const [dados, setDados] = useState<Props[]>([])
 
   const getFile = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
 
@@ -25,48 +26,40 @@ function App() {
       setFile(e.target.files[0])
     }
   }, [])
-  
+
   const upload = useCallback(async () => {
-    const fileRef = ref(storege, `pdf/${value}/${file.name}`)
-    console.log(String(file.name).split('.').map(String)[0])
+    const fileName = String(file.name).split('.').map(String)[0]
+    const fileRef = ref(storege, `pdf/${value}/${fileName.trim()}.pdf`)
 
-    uploadBytes(fileRef, file).then(h => { })
-    const url = await getDownloadURL(fileRef)
 
-    const colect = collection(fire, colection.sed)
-    const name = String(file.name).split('.').map(String)[0]
+    uploadBytes(fileRef, file).then(h => { console.log('app ok')})
+    const url = await getDownloadURL(fileRef) 
+    console.log(url)
+
     const dados = {
       page: 1,
-      name,
-      uri: url,
+      name: fileName,
+      uri: url
     }
 
-
-    switch (value) {
-      case 'pad':
-        console.log('Oranges are $0.59 a pound.');
-        break;
-      case 'sed':
-        console.log('ok sed')
-        break;
-      case 'ser':
-        console.log('Mangoes and papayas are $2.79 a pound.');
-        // expected output: "Mangoes and papayas are $2.79 a pound."
-        break;
-      case 'set':
-
-        break;
-      default:
-        console.log(`Sorry, we are out of ${value}.`);
-    }
-
-    // addDoc(colect, dados).then(() => alert('Success'))
+    const colect = collection(fire, value)
+    addDoc(colect, dados).then(() => alert('success'))
     
   }, [file, value])
 
+  useEffect(() => {
+    const colect = collection(fire, value)
+
+    onSnapshot(colect, h => {
+      const res = h.docs.map(h => h.data() as Props)
+      setDados(res)
+    })
+  }, [value])
+
+
   return (
-    <div style={{alignItems: 'center', justifyContent: 'center', display: 'flex'}} className="App">
-      <div style={{display: 'flex', flexDirection: 'column'}} >
+    <div style={{alignItems: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'column'}} className="App">
+      <div style={{display: 'flex', padding: 20, flexDirection: 'column'}} >
         <h1>Uploads de arquivos da geds</h1>
 
         <input onChange={getFile} type='file' />
@@ -74,16 +67,23 @@ function App() {
         <p >Qual o tipo de ged</p>
 
         <div style={{display: 'flex', marginBottom: 20}} >
-          <Select select={value === 'sed'} title='sed' pres={() => setValue('sed')} />
-          <Select select={value === 'set'} title='set' pres={() => setValue('set')} />
-          <Select select={value === 'ser'} title='ser' pres={() => setValue('ser')} />
-          <Select select={value === 'padrao'} title='padrões' pres={() => setValue('padrao')} />
+        <Select select={value === 'sed'} title='sed' pres={() => setValue('sed')} />
+        <Select select={value === 'set'} title='set' pres={() => setValue('set')} />
+        <Select select={value === 'ser'} title='ser' pres={() => setValue('ser')} />
+        <Select select={value === 'padrao'} title='padrões  ' pres={() => setValue('padrao')} />
+
         </div>
 
         <button onClick={upload} >upload</button>
       </div>
 
-
+      {/* <div style={{alignSelf: 'flex-start'}} >
+        {dados.map(h => (
+          <div key={h.name} >
+            <p>{h.name}</p>
+          </div>
+        ))}
+      </div> */}
 
     </div>
   )
